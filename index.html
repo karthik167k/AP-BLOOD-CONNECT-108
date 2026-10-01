@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AP Blood Connect</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Figtree:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;600&family=Noto+Sans+Telugu:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header><nav>
+<a class="logo" href="#home">AP Blood Connect</a>
+<div class="links"><a href="#home">Home</a><a href="#donate">Become a donor</a><a href="#emergency">Emergency</a><a href="#camps">Blood camps</a><a href="#ask">BloodBot</a></div>
+<span id="authArea"></span>
+</nav></header>
+
+<section class="hero" id="home">
+<div>
+<h1>One donation. Three lives.</h1>
+<p>AP Blood Connect connects blood donors with patients who need them, in minutes instead of hours. Check if you can donate, find a camp near you, or raise an emergency request.</p>
+<div class="cta"><a class="btn" href="#donate">Check eligibility &amp; register</a><a class="btn ghost" href="#emergency">I need blood now</a></div>
+<div class="stats"><div><b id="sDon">0</b><span>registered donors</span></div><div><b id="sReq">0</b><span>open requests</span></div><div><b>8</b><span>blood groups covered</span></div></div>
+</div>
+</section>
+
+<section id="needs">
+<h2>People who need blood right now</h2>
+<p class="lead">Sorted by urgency, most urgent first. Call the attender if you can donate.</p>
+<div class="filters">
+<label>District<select id="fDist"></select></label>
+<label>Blood group<select id="fBg"></select></label>
+<label>Urgency<select id="fUrg"></select></label>
+</div>
+<div class="card"><div class="tw"><table><thead><tr><th>Urgency</th><th>Patient</th><th>Group</th><th>Component</th><th>Units</th><th>Hospital</th><th>District</th><th>Contact</th></tr></thead><tbody id="needsBody"></tbody></table></div></div>
+</section>
+
+<section id="components">
+<h2>What kind of blood do you need?</h2>
+<div class="comp" id="compInfo"></div>
+</section>
+
+<section id="features">
+<h2>What would you like to do?</h2>
+<div class="feat">
+<div class="card"><a href="#donate"><h3>Become a donor</h3><p>Check your eligibility and register.</p></a></div>
+<div class="card"><a href="#emergency"><h3>Emergency requests</h3><p>Ask for blood or see who needs it.</p></a></div>
+<div class="card"><a href="#camps"><h3>Blood camps</h3><p>Find a camp and reserve a slot.</p></a></div>
+<div class="card"><a href="#ask"><h3>BloodBot</h3><p>Answers to your blood donation questions.</p></a></div>
+</div></section>
+
+<section id="bgchart">
+<h2>Who can give blood to whom</h2>
+<div class="card"><div class="tw"><table><thead><tr><th>Blood group</th><th>Can donate to</th><th>Can receive from</th></tr></thead><tbody id="compat"></tbody></table></div></div>
+</section>
+
+<section id="donate">
+<h2>Donor registration</h2>
+<p class="lead">Answer honestly. Your answers tell us whether donating is safe for you and for the patient.</p>
+<form id="donorForm" class="card">
+<fieldset><legend>About you</legend><div class="grid">
+<label>Full name<input name="name" required></label>
+<label>Phone<input name="phone" type="tel" pattern="[0-9+ ]{10,14}" required></label>
+<label>City<input name="city" required></label>
+<label>Age<input name="age" type="number" min="1" max="100" required></label>
+<label>Weight (kg)<input name="weight" type="number" min="20" max="200" required></label>
+<label>Gender<select name="gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></label>
+<label>Blood group<select name="bg" required><option value="">Select</option></select></label>
+<label>Hemoglobin (g/dL, if known)<input name="hb" type="number" step="0.1" min="5" max="20"></label>
+<label>Last donation date<input name="last" type="date"></label>
+</div></fieldset>
+<fieldset><legend>Health check</legend><div id="qs"></div></fieldset>
+<button class="btn" type="submit">Check eligibility &amp; register</button>
+<div class="result" id="donorResult" role="status"></div>
+</form>
+</section>
+
+<section id="emergency">
+<h2>Emergency blood requests</h2>
+<p class="lead">Post a request and every matching donor in your city can see it. For life-threatening situations, use the red SOS button.</p>
+<div class="tabs2">
+<form id="reqForm" class="card">
+<h3>Request blood</h3>
+<div style="display:grid;gap:12px">
+<label>Patient name<input name="patient" required></label>
+<label>Attender name<input name="attender" required></label>
+<label>Blood group needed<select name="bg" required></select></label>
+<label>Blood component needed<select name="comp" id="compSel"></select></label>
+<label>Units needed<input name="units" type="number" min="1" max="20" value="1" required></label>
+<label>Hospital &amp; city<input name="hospital" required></label>
+<label>District<select name="district" id="reqDist" required><option value="">Select</option></select></label>
+<label>Contact number<input name="phone" type="tel" pattern="[0-9+ ]{10,14}" required></label>
+<label>Urgency<select name="urgency" id="urgSel"><option>Critical</option><option>High</option><option>Moderate</option><option>Normal</option></select></label>
+<button class="btn" type="submit">Post request</button>
+</div></form>
+<div class="card"><h3>Open requests</h3><div id="reqList"></div></div>
+</div>
+</section>
+
+<section id="camps">
+<h2>Blood donation camps</h2>
+<p class="lead">Walk in, or reserve a slot. Camps are run with licensed blood banks.</p>
+<label style="max-width:320px;margin-bottom:16px">Filter by district<select id="distSel"></select></label>
+<div class="card" id="campList"></div>
+</section>
+
+<section id="ask">
+<h2>Ask BloodBot</h2>
+<p class="lead">Questions about eligibility, safety, preparation or blood groups.</p>
+<div class="card" id="chat">
+<label style="max-width:220px;font-size:.85rem;margin-bottom:8px">Language / భాష / भाषा<select id="lang"><option value="en">English</option><option value="te">తెలుగు</option><option value="hi">हिन्दी</option></select></label>
+<div id="msgs" aria-live="polite"></div>
+<div class="chips" id="chips"></div>
+<form class="chat-in" id="chatForm"><input id="chatIn" placeholder="Type your question…" aria-label="Your question" required><button class="btn" type="submit" id="chatBtn">Send</button></form>
+</div>
+</section>
+
+<footer>AP Blood Connect · Built for a hackathon demo. Not medical advice. Always follow your blood bank's screening.</footer>
+
+<button id="sos" aria-label="SOS emergency">SOS</button>
+<dialog id="sosDlg"><h3>Emergency help</h3>
+<p class="muted">If someone's life is at risk, call now.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="tel:112">Call 112</a><a class="btn" href="tel:108">Ambulance 108</a></div>
+<h3 style="margin-top:20px;font-size:1.1rem">Your emergency contacts</h3>
+<div id="sosContacts"></div>
+<form id="contactForm" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<input name="cname" placeholder="Contact name" required style="flex:1;min-width:110px;margin:0">
+<input name="cphone" placeholder="Phone" type="tel" pattern="[0-9+ ]{10,14}" required style="flex:1;min-width:110px;margin:0">
+<button class="btn sm" type="submit">Add contact</button>
+</form>
+<div style="text-align:right;margin-top:16px"><button class="btn ghost sm" id="sosClose">Close</button></div>
+</dialog>
+
+<dialog id="authDlg"><h3 id="authTitle">Log in</h3>
+<form id="authForm" style="display:grid;gap:12px">
+<label id="nmWrap" style="display:none">Full name<input id="aName"></label>
+<label>Email<input id="aEmail" type="email" required></label>
+<label>Password<input id="aPass" type="password" minlength="6" required></label>
+<button class="btn" type="submit" id="authBtn">Log in</button>
+<button class="btn ghost sm" type="button" id="authSwap">New here? Create an account</button>
+<button class="btn ghost sm" type="button" id="authClose">Cancel</button>
+</form></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
