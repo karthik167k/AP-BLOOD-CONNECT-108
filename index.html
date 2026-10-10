@@ -10,7 +10,7 @@
 <body>
 <header><nav>
 <a class="logo" href="#home">AP Blood Connect</a>
-<div class="links"><a href="#home">Home</a><a href="#donate">Become a donor</a><a href="#emergency">Emergency</a><a href="#camps">Blood camps</a><a href="#ask">BloodBot</a></div>
+<div class="links"><a href="#home">Home</a><a href="#donate">Become a donor</a><a href="#donors">Donors</a><a href="#emergency">Emergency</a><a href="#hospitals">Hospitals</a><a href="#camps">Blood camps</a><a href="#ask">BloodBot</a></div>
 <span id="authArea"></span>
 </nav></header>
 
@@ -44,6 +44,8 @@
 <div class="feat">
 <div class="card"><a href="#donate"><h3>Become a donor</h3><p>Check your eligibility and register.</p></a></div>
 <div class="card"><a href="#emergency"><h3>Emergency requests</h3><p>Ask for blood or see who needs it.</p></a></div>
+<div class="card"><a href="#donors"><h3>Donors list</h3><p>Find registered donors by blood group.</p></a></div>
+<div class="card"><a href="#hospitals"><h3>Hospitals</h3><p>Verified hospitals and blood units in stock.</p></a></div>
 <div class="card"><a href="#camps"><h3>Blood camps</h3><p>Find a camp and reserve a slot.</p></a></div>
 <div class="card"><a href="#ask"><h3>BloodBot</h3><p>Answers to your blood donation questions.</p></a></div>
 </div></section>
@@ -69,6 +71,7 @@
 <label>Last donation date<input name="last" type="date"></label>
 </div></fieldset>
 <fieldset><legend>Health check</legend><div id="qs"></div></fieldset>
+<label class="chk"><input type="checkbox" name="consent" required> I agree that my name, blood group, city and phone number may be shown in the Donors list to logged-in users who need blood.</label>
 <button class="btn" type="submit">Check eligibility &amp; register</button>
 <div class="result" id="donorResult" role="status"></div>
 </form>
@@ -94,6 +97,33 @@
 </div></form>
 <div class="card"><h3>Open requests</h3><div id="reqList"></div></div>
 </div>
+</section>
+
+<section id="donors">
+<h2>Donors list</h2>
+<p class="lead">People who have registered to donate. Log in to see phone numbers.</p>
+<div class="filters"><label>Blood group<select id="dBg"></select></label><label>Search by name or city<input id="dQ" placeholder="e.g. Ongole"></label></div>
+<p class="muted" id="dCount"></p>
+<div class="card"><div class="tw"><table><thead><tr><th>Name</th><th>Group</th><th>City</th><th>Contact</th></tr></thead><tbody id="dBody"></tbody></table></div></div>
+</section>
+
+<section id="hospitals">
+<h2>Hospitals &amp; blood banks</h2>
+<p class="lead">Registered and verified hospitals with the blood units available. Green means 5 or more units, amber means fewer than 5, red means out of stock.</p>
+<div class="filters"><label>District<select id="hDist"></select></label><label>Blood group in stock<select id="hBg"></select></label><label>Type<select id="hType"></select></label></div>
+<div class="hgrid" id="hList"></div>
+<details class="card" style="margin-top:24px"><summary><b>Register your hospital or blood bank</b></summary>
+<form id="hospForm" style="margin-top:14px"><div class="grid">
+<label>Name<input name="name" required></label>
+<label>Type<select name="type" required><option>Government hospital</option><option>Private hospital</option><option>Blood bank</option></select></label>
+<label>District<select name="district" id="hrDist" required><option value="">Select</option></select></label>
+<label>Address<input name="address" required></label>
+<label>Phone<input name="phone" type="tel" pattern="[0-9+ ]{10,14}" required></label>
+<label>Registration / licence number<input name="reg_no" required></label>
+</div>
+<label class="chk"><input type="checkbox" name="open"> Open 24×7</label>
+<button class="btn" type="submit">Submit for verification</button>
+<p class="muted">It appears on this page after our team verifies the registration number.</p></form></details>
 </section>
 
 <section id="camps">
