@@ -83,3 +83,18 @@ dialog::backdrop{background:rgba(20,5,8,.6)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;z-index:50;display:none}
 footer{text-align:center;padding:30px 20px 90px;color:var(--mute);font-size:.9rem;border-top:1px solid var(--line)}
 @media(max-width:800px){.hero,.tabs2{grid-template-columns:1fr}.drop{max-width:220px}.drop b{font-size:3rem}nav{flex-wrap:wrap;gap:6px 14px}nav .links{order:3;width:100%}}
+
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.hosp h3{font-size:1.2rem;margin:0 0 6px}
+.hh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.vbadge{background:#12301f;color:#8fe0b3;border-radius:99px;padding:3px 10px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.cmp.open{background:#12301f;color:#8fe0b3}
+.stock{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.st{border-radius:10px;padding:8px 4px;text-align:center;background:var(--bg);border:1.5px solid var(--line)}
+.st b{display:block;font:800 .95rem 'Bricolage Grotesque',sans-serif}
+.st span{font-size:1.15rem;font-weight:600}
+.st.ok span{color:var(--ok)}.st.low span{color:var(--warn)}.st.out span{color:var(--red)}
+.st.sel{border-color:var(--ink)}
+.chk{display:flex;align-items:flex-start;gap:10px;font-weight:400;margin:16px 0;color:var(--mute)}
+.chk input{width:auto;margin:4px 0 0}
+details summary{cursor:pointer;font-size:1.05rem}
