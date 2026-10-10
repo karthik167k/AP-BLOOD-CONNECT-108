@@ -21,6 +21,9 @@ async function api(path,opt={}){
   case 'POST /requests':ok(await sb.from('requests').insert(b));return{ok:true};
   case 'GET /donors':return ok(await sb.from('donor_groups').select('bg'));
   case 'POST /donors':ok(await sb.from('donors').insert(b));return{ok:true};
+  case 'GET /donor-list':return ok(await sb.from('donor_directory').select('*').order('id',{ascending:false}).limit(500));
+  case 'GET /hospitals':return ok(await sb.from('hospitals').select('*, blood_stock(bg,units,updated_at)').order('name'));
+  case 'POST /hospitals':ok(await sb.from('hospitals').insert(b));return{ok:true};
   case 'GET /camps':return ok(await sb.from('camps').select('*').order('id'));
   case 'GET /contacts':return ok(await sb.from('contacts').select('id,name,phone').order('id'));
   case 'POST /contacts':ok(await sb.from('contacts').insert(b));return{ok:true};
@@ -29,7 +32,7 @@ async function api(path,opt={}){
   case 'GET /me':{const d=ok(await sb.auth.getUser());return{user:mapUser(d.user)}}
  }
  throw new Error('Unknown request')}
-async function loadPublic(){try{[state.reqs,state.donors]=await Promise.all([api('/requests'),api('/donors')])}catch(e){toast('Cannot reach the server')}render()}
+async function loadPublic(){try{[state.reqs,state.donors,state.dlist,state.hosps]=await Promise.all([api('/requests'),api('/donors'),api('/donor-list').catch(()=>[]),api('/hospitals').catch(()=>[])])}catch(e){toast('Cannot reach the server')}render()}
 async function loadCamps(){try{CAMPS=(await api('/camps')).map(c=>[c.name,c.date_text,c.time_text,c.venue,c.district,c.id])}catch(e){}renderCamps()}
 async function loadUser(){const{data:{session}}=await sb.auth.getSession();if(!session)return;try{state.user=(await api('/me')).user;state.contacts=await api('/contacts')}catch(e){}render()}
 
@@ -51,7 +54,7 @@ $('#donorForm').onsubmit=async e=>{
  QS.forEach((q,i)=>{if(f['q'+i]==='Yes')why.push('Health answer needs review: '+q[0])});
  const r=$('#donorResult');
  if(why.length){r.className='result no';r.innerHTML='<b>Not eligible right now.</b><ul>'+why.map(w=>`<li>${esc(w)}</li>`).join('')+'</ul>Thank you for checking. You can still help by sharing requests.';return}
- try{await api('/donors',{method:'POST',body:{name:f.name,phone:f.phone,city:f.city,bg:f.bg,age:+f.age,weight:+f.weight,gender:f.gender}})}catch(err){toast(err.message);return}
+ try{await api('/donors',{method:'POST',body:{name:f.name,phone:f.phone,city:f.city,bg:f.bg,age:+f.age,weight:+f.weight,gender:f.gender,consent:true}})}catch(err){toast(err.message);return}
  r.className='result ok';r.innerHTML=`<b>You're eligible, ${esc(f.name)}.</b> You are registered as a ${esc(f.bg)} donor in ${esc(f.city)}.`;
  e.target.reset();loadPublic();
 };
@@ -85,6 +88,7 @@ function render(){
  const lo=$('#logout');if(lo)lo.onclick=async()=>{await sb.auth.signOut();state.user=null;state.contacts=[];render();toast('Logged out')};
  const rank={Critical:0,High:1,Moderate:2,Normal:3},fd=$('#fDist').value,fb=$('#fBg').value,fu=$('#fUrg').value,sorted=reqs.filter(q=>(!fd||q.district===fd)&&(!fb||q.bg===fb)&&(!fu||q.urgency===fu)).sort((a,b)=>(rank[a.urgency]??4)-(rank[b.urgency]??4));
  $('#needsBody').innerHTML=sorted.length?sorted.map(q=>`<tr><td><span class="urg ${esc(q.urgency)}">${esc(q.urgency)}</span></td><td><b>${esc(q.patient)}</b><br><span class="muted">Attender: ${esc(q.attender||'—')}</span></td><td><span class="tag">${esc(q.bg)}</span></td><td>${esc(q.comp||'Whole blood')}</td><td>${esc(q.units)}</td><td>${esc(q.hospital)}</td><td>${esc(q.district||'—')}</td><td><a class="btn sm" href="tel:${esc(q.phone)}">Call</a></td></tr>`).join(''):'<tr><td colspan="8" class="muted">No requests match these filters.</td></tr>';
+ renderDonors();renderHospitals();
 }
 window.delC=async i=>{try{await api('/contacts/'+state.contacts[i].id,{method:'DELETE'});state.contacts=await api('/contacts');fillSos()}catch(e){toast(e.message)}};
 $('#contactForm').onsubmit=async e=>{e.preventDefault();if(!user()){$('#sosDlg').close();openAuth('login');toast('Log in to save contacts');return}const f=Object.fromEntries(new FormData(e.target));try{await api('/contacts',{method:'POST',body:{name:f.cname,phone:f.cphone}});state.contacts=await api('/contacts');e.target.reset();fillSos();toast('Contact added')}catch(err){toast(err.message)}};
@@ -98,7 +102,7 @@ DISTS.forEach(d=>$('#reqDist').add(new Option(d,d)));
 [['fDist','All districts',DISTS],['fBg','All blood groups',BG],['fUrg','All urgency levels',['Critical','High','Moderate','Normal']]].forEach(([id,all,list])=>{const e=$('#'+id);e.add(new Option(all,''));list.forEach(x=>e.add(new Option(x,x)));e.onchange=render});
 function renderCamps(){const b=db.get('booked',[]),d=$('#distSel').value;
  const rows=CAMPS.map(c=>[c,c[5]]).filter(x=>!d||x[0][4]===d);
- $('#campList').innerHTML=rows.length?rows.map(([c,i])=>`<div class="item"><div><b>${c[0]}</b> <span class="cmp">${c[4]}</span><br><span class="muted">${c[1]} · ${c[2]}<br>${c[3]}</span></div><button class="btn sm ${b.includes(i)?'ghost':''}" onclick="book(${i})">${b.includes(i)?'Reserved':'Reserve slot'}</button></div>`).join(''):'<p class="muted">No camps listed in this district yet. Try another district or check back soon.</p>'}
+ $('#campList').innerHTML=rows.length?rows.map(([c,i])=>`<div class="item"><div><b>${c[0]}</b> <span class="cmp">${c[4]}</span><br><span class="muted">${c[1]} · ${c[2]}<br>${c[3]}</span></div><span style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn ghost sm" href="${mapsDir(c[3]+', '+c[4]+', Andhra Pradesh')}" target="_blank" rel="noopener">Directions</a><button class="btn sm ${b.includes(i)?'ghost':''}" onclick="book(${i})">${b.includes(i)?'Reserved':'Reserve slot'}</button></span></div>`).join(''):'<p class="muted">No camps listed in this district yet. Try another district or check back soon.</p>'}
 window.book=async i=>{const b=db.get('booked',[]);if(b.includes(i))return;try{await api('/camps/'+i+'/book',{method:'POST'});b.push(i);db.set('booked',b);renderCamps();toast('Slot reserved')}catch(e){toast(e.message)}};
 
 /* auth */
@@ -191,6 +195,27 @@ $('#chatForm').onsubmit=e=>{e.preventDefault();const q=$('#chatIn').value.trim()
 $('#chips').onclick=e=>{if(e.target.tagName==='BUTTON')say(e.target.textContent)};
 $('#lang').onchange=e=>{lang=e.target.value;$('#chatIn').placeholder=T.ph[lang];$('#chatBtn').textContent=T.send[lang];drawChips();add(T.hi[lang])};
 add(T.hi.en);drawChips();
+
+/* donors list & hospitals */
+const ago=t=>{const m=Math.max(1,Math.round((Date.now()-new Date(t))/6e4));return m<60?m+' min ago':m<1440?Math.round(m/60)+' hours ago':Math.round(m/1440)+' days ago'};
+const mapsDir=q=>'https://www.google.com/maps/dir/?api=1&travelmode=driving&destination='+encodeURIComponent(q);
+[['dBg','All blood groups',BG],['hBg','Any blood group',BG],['hDist','All districts',DISTS],['hType','All types',['Government hospital','Private hospital','Blood bank']]].forEach(([id,all,l])=>{const e=$('#'+id);e.add(new Option(all,''));l.forEach(x=>e.add(new Option(x,x)));e.onchange=()=>{renderDonors();renderHospitals()}});
+$('#dQ').oninput=()=>renderDonors();
+DISTS.forEach(d=>$('#hrDist').add(new Option(d,d)));
+function renderDonors(){const all=state.dlist||[],q=$('#dQ').value.trim().toLowerCase(),b=$('#dBg').value,u=user();
+ const rows=all.filter(d=>(!b||d.bg===b)&&(!q||(d.city+' '+d.name).toLowerCase().includes(q)));
+ $('#dCount').textContent=`Showing ${rows.length} of ${all.length} donors`;
+ $('#dBody').innerHTML=rows.length?rows.map(d=>`<tr><td><b>${esc(d.name)}</b></td><td><span class="tag">${esc(d.bg)}</span></td><td>${esc(d.city)}</td><td>${u&&d.phone?`<a class="btn sm" href="tel:${esc(d.phone)}">Call</a>`:`<button class="btn ghost sm" onclick="openAuth('login')">Log in to call</button>`}</td></tr>`).join(''):'<tr><td colspan="4" class="muted">No donors match. Try another blood group or city.</td></tr>'}
+function renderHospitals(){const all=state.hosps||[],d=$('#hDist').value,b=$('#hBg').value,t=$('#hType').value;
+ const units=h=>Object.fromEntries((h.blood_stock||[]).map(s=>[s.bg,s.units]));
+ const rows=all.filter(h=>(!d||h.district===d)&&(!t||h.type===t)&&(!b||(units(h)[b]||0)>0));
+ $('#hList').innerHTML=rows.length?rows.map(h=>{const u=units(h),tot=BG.reduce((s,g)=>s+(u[g]||0),0),up=(h.blood_stock||[]).map(s=>s.updated_at).sort().pop();
+  return `<div class="card hosp"><div class="hh"><div><h3>${esc(h.name)}</h3><span class="cmp">${esc(h.type)}</span> <span class="cmp">${esc(h.district)}</span>${h.open_24x7?' <span class="cmp open">Open 24×7</span>':''}</div><span class="vbadge">✔ Verified</span></div>
+<p class="muted">${esc(h.address)} · Reg. no. ${esc(h.reg_no)}</p>
+<div class="stock">${BG.map(g=>{const n=u[g]||0;return `<div class="st ${n===0?'out':n<5?'low':'ok'}${g===b?' sel':''}"><b>${g}</b><span>${n}</span></div>`}).join('')}</div>
+<p class="muted" style="margin:.7em 0">${tot} units in stock${up?' · updated '+ago(up):''}</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm" href="tel:${esc(h.phone)}">Call</a><a class="btn ghost sm" href="${mapsDir(h.name+', '+h.address+', '+h.district+', Andhra Pradesh')}" target="_blank" rel="noopener">Directions</a></div></div>`}).join(''):'<p class="muted">No verified hospitals match these filters.</p>'}
+$('#hospForm').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));try{await api('/hospitals',{method:'POST',body:{name:f.name,type:f.type,district:f.district,address:f.address,phone:f.phone,reg_no:f.reg_no,open_24x7:!!f.open}});e.target.reset();toast('Submitted. It will appear after verification.')}catch(err){toast(err.message)}};
 
 function route(){const h=location.hash.slice(1)||'home',el=document.getElementById(h),pg=el&&el.tagName==='SECTION'?h:'home';
  document.querySelectorAll('section').forEach(x=>x.classList.toggle('active',x.id===pg||(pg==='home'&&['needs','components','features','bgchart'].includes(x.id))));
